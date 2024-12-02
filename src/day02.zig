@@ -24,6 +24,7 @@ pub fn main() !void {
 
 fn isOk(report: *Report) bool {
     var sign: i8 = undefined;
+
     for (report.items, 0..) |num, i| {
         if (i == 0) continue;
 
@@ -39,10 +40,22 @@ fn isOk(report: *Report) bool {
     return true;
 }
 
+fn isDampenedOk(report: *Report) bool {
+    if (isOk(report)) return true;
+
+    for (0..report.items.len) |i| {
+        var copy = report.clone() catch unreachable;
+        _ = copy.orderedRemove(i);
+        if (isOk(&copy)) return true;
+    }
+
+    return false;
+}
+
 fn countAll(reports: *Grid) usize {
     var count_ok: usize = 0;
     for (reports.items) |*report| {
-        if (isOk(report))
+        if (isDampenedOk(report))
             count_ok += 1;
     }
     return count_ok;
@@ -129,7 +142,7 @@ test "14 11 10 9 6 4 : OK" {
     try std.testing.expect(isOk(&report));
 }
 
-test "1 2 2 3 : FAIL" {
+test "1 2 2 3 : FAIL (OK)" {
     var report = Report.init(gpa);
     defer report.deinit();
 
